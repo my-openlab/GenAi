@@ -9,7 +9,8 @@ This the idea is to use chat gpt or like of it to do most work let's do it right
 
 ChatGPT 3.5
 
-User
+User:
+
 hyperdimensional computing, what is it?
 ChatGPT
 
@@ -21,7 +22,8 @@ Hyperdimensional computing has shown promise in various applications, including 
 
 Overall, hyperdimensional computing represents a novel approach to information processing that may offer significant advantages over traditional computing paradigms in certain domains. However, it is still a relatively young field, and further research is needed to fully understand its capabilities and limitations.
 
-User
+User:
+
 how may this be used for wake word detection in hardware
 ChatGPT
 1. **Encoding the Audio Input**: The audio signal containing the user's speech needs to be converted into a format suitable for hyperdimensional computing. This could involve encoding the audio signal into a high-dimensional vector representation. Various techniques, such as time-frequency analysis (e.g., Fourier transforms), could be employed to extract features from the audio signal.
