@@ -40,7 +40,7 @@ def audio_to_embedding(audio, sr=16000, plot=False):
         A numpy array containing the log-mel spectrogram features of shape (time_steps, 32).
     """
     # Constants for the STFT and Mel transformation
-    n_fft = int(0.025 * sr)  # 25ms window size
+    n_fft = int(0.025 * sr)  # 25ms window size= 400
     hop_length = int(0.010 * sr)  # 10ms step size
     fmin = 60  # minimum frequency for mel scale
     fmax = 3800  # maximum frequency for mel scale
@@ -73,4 +73,4 @@ if __name__ == "__main__":
     audio = record_audio(duration, sr)
     embeddings = audio_to_embedding(audio, sr, plot=True)
     print("Shape of embeddings:", embeddings.shape)
-    print("Embeddings data example:", embeddings)
+    # print("Embeddings data example:", embeddings)
