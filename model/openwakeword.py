@@ -61,14 +61,14 @@ def audio_to_embedding(audio, sr=16000, plot=False):
         librosa.display.specshow(log_mel_spec, sr=sr, hop_length=hop_length, x_axis='time', y_axis='mel', fmin=fmin, fmax=fmax)
         plt.colorbar(format='%+2.0f dB')
         plt.title('Log-Mel Spectrogram')
-        plt.savefig('log_mel_spectrogram.png')
+        plt.savefig('images/log_mel_spectrogram.png')
     
     return log_mel_spec.T  # transpose to have shape (time_steps, 32)
 
 # Example usage:
 if __name__ == "__main__":
-    # Record 1.98 seconds of audio
-    duration = 1.980
+    # Record 1.975 seconds of audio
+    duration = 1.975
     sr = 16000
     audio = record_audio(duration, sr)
     embeddings = audio_to_embedding(audio, sr, plot=True)
