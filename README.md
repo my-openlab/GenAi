@@ -4,38 +4,56 @@ The project intent is to use Hyperdimensional vectors to represent and detect wa
 
 This decomposes the problem of detection to simple implementations of logical AND,logical XOR and permutation.
 
-This the idea is to use chat gpt or like of it to do most work let's do it right away!!
+This the idea is to use chatgpt or likes of it to do most work!! So even if some code could be better or manually written
+the intention is to keep manual coding minimalistic and see the limits of chatgpt for design.
 
 
-ChatGPT 3.5
+The first intention was to try to do a novel algorithm instead of the proven NN approach. But, given the time limit and available
+personal time I rather have something that is atleast working in simulation that explore the research aspect. May be I would come back at it someday!! 
 
-User:
+After a breif study (3 days) I changed the design solution to be based on the following points:
+choose a open source wake word model that is simple to implement and might work on resource constrained device. 
+after a study with chatgpt (q & a) and looking around on the web, the one of the simplest and efficient model for RaspberryPi like devices 
+is the [openwakeword](https://github.com/dscripka/openWakeWord). Although there is an more efficient [microwakeword](https://github.com/kahrendt/microWakeWord) model, openwakeword model is more direct and perhaps need less customizations. 
 
-hyperdimensional computing, what is it?
-ChatGPT
+The model architecture is simple: 
 
-Hyperdimensional computing is an emerging field of research that draws inspiration from theories of high-dimensional spaces in mathematics and physics. In hyperdimensional computing, data is represented and manipulated in high-dimensional vectors rather than traditional binary or numerical formats. This approach leverages the properties of high-dimensional spaces to perform various computational tasks efficiently.
+openWakeword models are composed of three separate components:
 
-One key concept in hyperdimensional computing is the idea of "binding" or combining information through vector operations in high-dimensional space. This allows for the integration of multiple pieces of information into a single representation, enabling robust and flexible processing.
+  * melspectrogram : a 32 dimensional log-mel features from the provided audio samples using the following parameters:
+        * stft window size: 25ms
+        * stft window step: 10ms
+        * mel band limits: 60Hz - 3800Hz
+        * mel frequency bins: 32
 
-Hyperdimensional computing has shown promise in various applications, including pattern recognition, machine learning, and cognitive modeling. Its ability to handle noisy and incomplete data, as well as its resistance to certain types of errors, makes it particularly suitable for tasks in environments with high levels of uncertainty or ambiguity.
+        This is implemented as a dataflow graph as in ![melspectrogram model](images/melspectrogram.onnx.png). Although mathematically, the steps involves many more multiplications (fft -> abs -> pow2 -> log -> mel filterbank multiplications).
+        A 1975msec audio recording, i.e. here results in (198,32) log mel embedding that can be fed into the next model. 
 
-Overall, hyperdimensional computing represents a novel approach to information processing that may offer significant advantages over traditional computing paradigms in certain domains. However, it is still a relatively young field, and further research is needed to fully understand its capabilities and limitations.
 
-User:
+  * feature embeddings model: This model is provided by Google as a TFHub module under an Apache-2.0 license. For Genai, there is a python model that still being developed (using chatgpt, see model directory). The embedding model is developed based on the [paper](A https://arxiv.org/pdf/2005.06720). The referenced model is available at [kaggle](https://www.kaggle.com/models/google/speech-embedding/tensorFlow1/speech-embedding). "The architecture results in the first embedding requiring 12400 samples (775ms or 76 feature vectors). Each subsequent embedding vector requires a further 1280 samples (80ms or 8 feature vectors)". Thus resulting in expected embedding length = 16, when considering 1975msec audio recording, i.e. (198,32) input 
 
-how may this be used for wake word detection in hardware
-ChatGPT
-1. **Encoding the Audio Input**: The audio signal containing the user's speech needs to be converted into a format suitable for hyperdimensional computing. This could involve encoding the audio signal into a high-dimensional vector representation. Various techniques, such as time-frequency analysis (e.g., Fourier transforms), could be employed to extract features from the audio signal.
+    Some of the details are not clearly understood but the initial model presented here closely matched to that being presented in the paper. The number of trainable parameters being 330K (329,929 to be exact). There could further tweaks to the model as the I get more time/roadblocks while developing. This is implemented as a dataflow graph as in ![embedding model](images/embedding_model.onnx.png). 
 
-2. **Mapping to Hyperdimensional Space**: The extracted features are then mapped into a hyperdimensional space. Each feature or combination of features could correspond to a high-dimensional vector within this space. The properties of high-dimensional spaces, such as the ability to encode rich semantic information, can be leveraged to represent different aspects of the audio signal.
+  * classification model: according the openWakeWord "The structure of this classification model is arbitrary, but in practice a simple fully-connected network or 2 layer RNN works well". For the time being, This part is already included in the feature embedding model. Ideally, this should have been something like ![alexa model](images/alexa_v0.1.onnx.png).
 
-3. **Creating a Wake Word Representation**: A specific wake word, such as "Hey, Assistant," needs to be represented within the hyperdimensional space. This can be done by encoding the wake word into a unique high-dimensional vector. This vector serves as a reference or template for recognizing instances of the wake word.
+The above steps gives an intuition of the computational complexity. We can roughly estimate the number of multiplications needed. See queried prompts to aid this analysis[](model/design_thoughts.prompt.md)
 
-4. **Detection Algorithm**: During operation, the incoming audio signal is continuously processed and compared with the hyperdimensional representation of the wake word. Various similarity measures or classification techniques can be employed to determine the degree of resemblance between the input signal and the wake word representation.
+| step   | calculation |  mults |  per time interval | input |output |
+|----------|:-------------:|:------:|:------:|:------:|:------:|
+| melspectrogram|  2×131,584×(round(n−257)/160​+1)+4,180,224+3n−1, n = 0.025*16000| 4708591 | 10ms |25 ms audio @ 16khz sampling rate |one 32-dimensional log-mel feature vector |
+| embeddings model |    >= #trainable parameters   |   329929 | no calcs needed for first 775 ms,  then every 80ms upto 1975ms-775ms= 1200ms|76 log-mel feature vectors| one 96-dimensional embedded vector |
+| keyword model | 128*1536 + (128*128) + 128 |    213120| no calcs needed for first 1975 ms, then every 80ms |16-embedded vector | 1 sigmoid output indicating yes/no|
+|Total |                                        | 5251640 (~5.25M)  ||
 
-5. **Thresholding and Decision Making**: A thresholding mechanism is applied to the similarity scores obtained from the comparison process. If the similarity score exceeds a certain threshold, it indicates that the input signal likely contains the wake word. This triggers the activation of subsequent actions or commands within the hardware system.
 
-6. **Adaptation and Learning**: The system may incorporate mechanisms for adaptation and learning, allowing it to improve its wake word detection performance over time. This could involve updating the hyperdimensional representations based on new data and adjusting the detection threshold dynamically.
+Assume :
+  - streaming mode i.e. continous audio, this means every 10ms, 5M multiplications have to be done. This is because when the last keyword model is run, there are no more melspectrogram windows to calculate. Of which the melspectrogram step needs max computations in shortest amount of time. Thus, making it to be an ideal candidate for acceleration.
+  
+  - user space clock frequency of 40 MHz. It might be ideal to choose a large matrix multiplier 256x256 to do the main melspectrogram fast enough. But given the space on silicon, such large design may not fit. I am yet to think over the micro architecture for this. 
 
-By leveraging the principles of hyperdimensional computing, wake word detection in hardware systems can potentially achieve efficient and robust performance, even in noisy or variable environments. Additionally, the inherent parallelism of hyperdimensional computing makes it suitable for implementation in hardware architectures optimized for low-power and real-time processing, such as neuromorphic computing platforms.
+  TO DO:
+  - micro architecture
+  - memory buffer requirements
+  - dataflow
+  - thorough performance estimates
+
