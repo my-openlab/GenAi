@@ -54,7 +54,7 @@ Assume :
 After some good sleep, the GEMM module might be needed at all. I sonsider [INMP441](https://www.tinytronics.nl/index.php?route=product/product/get_file&file=3422/INMP441.pdf) as the sensor to be used. Representing 18 bit/ 24 bit audio samples at 16-bit should be feasible with some pre-processing/filtering. This can eventually be compressed into 8 bits samples, there by writing 4 samples into memory @ 4KHz. A 1975 milli second audio recording would there by take 4096 32-bit words in memory.
 
 Assuming we can operate at atleast 40MHz, 1975ms audio recording in memory can be read by caraval subsystem in 103 usec.
-  ![Top level diagram](doc/images/top.svg)
+  ![Top level diagram](doc/images/top.png)
 
   TO DO:
   - micro architecture
