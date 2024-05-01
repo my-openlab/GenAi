@@ -51,9 +51,9 @@ Assume :
   
   - user space clock frequency of 40 MHz. It might be ideal to choose a large matrix multiplier 256x256 to do the main melspectrogram fast enough. But given the space on silicon, such large design may not fit. I am yet to think over the micro architecture for this. 
 
-After some good sleep, the GEMM module might be needed at all. Representing 18 bit/ 24 bit audio samples at 16-bit should be feasible with some pre-processing/filtering. This can eventually be compressed into 8 bits samples, there by writing 4 samples into memory @ 4KHz. A 2second audio recording would there by take 4096 32-bit words in memory.
- 
-Assuming we can operate at atleast 40MHz, 2 second audio recording in memory can be read by caraval subsystem in 103 usec.
+After some good sleep, the GEMM module might be needed at all. I sonsider [INMP441](https://www.tinytronics.nl/index.php?route=product/product/get_file&file=3422/INMP441.pdf) as the sensor to be used. Representing 18 bit/ 24 bit audio samples at 16-bit should be feasible with some pre-processing/filtering. This can eventually be compressed into 8 bits samples, there by writing 4 samples into memory @ 4KHz. A 1975 milli second audio recording would there by take 4096 32-bit words in memory.
+
+Assuming we can operate at atleast 40MHz, 1975ms audio recording in memory can be read by caraval subsystem in 103 usec.
   ![Top level diagram](doc/images/top.svg)
 
   TO DO:
