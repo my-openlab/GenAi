@@ -40,7 +40,7 @@ The above steps gives an intuition of the computational complexity. We can rough
 
 | step   | calculation |  mults |  per time interval | input |output |
 |----------|:-------------:|:------:|:------:|:------:|:------:|
-| melspectrogram|  2×131,584×(round(n−257)/160​+1)+4,180,224+3n−1, n = 0.025*16000| 4708591 | 10ms |25 ms audio @ 16khz sampling rate |one 32-dimensional log-mel feature vector |
+| melspectrogram |  2×131,584×(round(n−257)/160​+1)+4,180,224+3n−1, n = 0.025*16000| 4708591 | 10ms |25 ms audio @ 16khz sampling rate |one 32-dimensional log-mel feature vector |
 | embeddings model |    >= #trainable parameters   |   329929 | no calcs needed for first 775 ms,  then every 80ms upto 1975ms-775ms= 1200ms|76 log-mel feature vectors| one 96-dimensional embedded vector |
 | keyword model | 128*1536 + (128*128) + 128 |    213120| no calcs needed for first 1975 ms, then every 80ms |16-embedded vector | 1 sigmoid output indicating yes/no|
 |Total |                                        | 5251640 (~5.25M)  ||
